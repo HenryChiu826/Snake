@@ -1,0 +1,273 @@
+#include <iostream>
+#include <stdlib.h>
+#include <cstdlib>
+#include <ctime>
+#include <conio.h>
+#include <windows.h>
+using namespace std;
+
+const int x = 20;
+const int y = 20;
+int snakeX = x/2;
+int snakeY = y/2;
+int dir = 4;
+int score = 0;
+bool gameOver = false;
+int fruitX, fruitY;
+int maxNumOfTail = 100;
+int tailCord[100][2];
+int delayCordX, delayCordY;
+int delayTailCord[100][2];
+int wallOption;
+int difOption;
+int difSetting;
+int yAxisSlowFactor = difSetting/2;
+
+void setup()
+{
+    for (int i = 0; i < score; i++)
+    {
+        if (i == 0) //The first part of tail
+        {
+            tailCord[0][0] = delayCordY;
+            tailCord[0][1] = delayCordX;
+        }
+        else
+        {
+            tailCord[i][0] = delayTailCord[i-1][0];
+            tailCord[i][1] = delayTailCord[i-1][1];
+        }
+    }
+
+    char layout[y][x];
+    for (int i = 0; i < x; i++) // Print first border
+    {
+        layout[0][i] = '#';
+        cout << layout[0][i];
+    }
+    cout << '\n';
+
+    for (int j = 1; j < y-1; j++)
+    {
+        for (int s = 0; s < x; s++)
+        {
+            if (s == 0 )
+            {
+                layout[j][s] = '#';
+            }
+            else if (s == x-1)
+            {
+                layout[j][s] = '#';
+            }
+            else if (j == snakeY && s == snakeX)
+            {
+                layout[j][s] = 'O';
+            }
+            else if (j == fruitY && s == fruitX)
+            {
+                layout[j][s] = '+';
+            }
+            else
+            {
+                layout[j][s] = ' ';
+            }
+            for (int i = 0; i < score; i++)
+            {
+                if(j == tailCord[i][0] && s == tailCord[i][1])
+                {
+                    layout[j][s] = 'o';
+                }
+            }
+        }
+    }
+    for (int j = 1; j < y-1; j++)
+    {
+        for (int s = 0; s < x; s++)
+        {
+            cout << layout[j][s];
+            if (s == x-1)
+                cout << endl;
+        }
+    }
+
+    if (fruitY == snakeY && fruitX == snakeX)
+        {
+            score++;
+            fruitX = rand() % (x-2) + 1;
+            fruitY = rand() % (y-2) + 1;
+        }
+
+    for (int i = 0; i < x; i++)
+    {
+        layout[y-1][i] = '#';
+        cout << layout[y-1][i];
+    }
+    cout << '\n' << "Score: " << score << '\n';
+
+    for (int i = 0; i < score; i++)
+    {
+        delayTailCord[i][0] = tailCord[i][0];
+        delayTailCord[i][1] = tailCord[i][1];
+    }
+        delayCordX = snakeX;
+        delayCordY = snakeY;
+
+}
+
+enum Direction
+{
+    UP,
+    DOWN,
+    RIGHT,
+    LEFT,
+    NO_DIRECTION
+};
+
+
+void logic()
+{
+    if (_kbhit())
+    {
+        switch (_getch())
+    {
+        case 'w':
+            dir = UP;
+            break;
+        case 'W':
+            dir = UP;
+            break;
+        case 's':
+            dir = DOWN;
+            break;
+        case 'S':
+            dir = DOWN;
+            break;
+        case 'd':
+            dir = RIGHT;
+            break;
+        case 'D':
+            dir = RIGHT;
+            break;
+        case 'a':
+            dir = LEFT;
+            break;
+        case 'A':
+            dir = LEFT;
+            break;
+    }
+    }
+
+
+    switch(dir)
+    {
+    case UP:
+        snakeY--;
+        Sleep(yAxisSlowFactor);
+        break;
+    case DOWN:
+        snakeY++;
+        Sleep(yAxisSlowFactor);
+        break;
+    case RIGHT:
+        snakeX++;
+        break;
+    case LEFT:
+        snakeX--;
+        break;
+    }
+    for (int i = 0; i < maxNumOfTail; i++)
+    {
+        if(snakeX == tailCord[i][1] && snakeY == tailCord[i][0])
+            gameOver = true;
+    }
+
+    if (wallOption == 1)
+    {
+        if(snakeX == x-1)
+        gameOver = true;
+        if(snakeX == 0)
+        gameOver = true;
+
+        if(snakeY == y-1)
+        gameOver = true;
+        if(snakeY == 0)
+        gameOver = true;
+    }
+    else
+    {
+        if(snakeX == x-1)
+        snakeX = 1;
+        if(snakeX == 0)
+        snakeX = x-2;
+        if(snakeY == y-1)
+        snakeY = 1;
+        if(snakeY == 0)
+        snakeY = y-2;
+    }
+}
+
+void ShowConsoleCursor(bool showFlag)
+{
+    HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    CONSOLE_CURSOR_INFO     cursorInfo;
+
+    GetConsoleCursorInfo(out, &cursorInfo);
+    cursorInfo.bVisible = showFlag; // set the cursor visibility
+    SetConsoleCursorInfo(out, &cursorInfo);
+}
+
+int main()
+{
+    ShowConsoleCursor(false);
+    system("pause");
+
+    cout << "If wall = death, enter 1. Else enter anything. ";
+    cin >> wallOption;
+    if (cin.fail())
+    {
+        cin.clear();
+        cin.ignore(1000, '\n');
+    }
+
+    cout << "Select Difficulty: 1 = Very Slow, 2 = Slow, 3 = Medium, 4 = Fast, 5 = Very Fast. Anything else is random. ";
+    cin >> difOption;
+    if (cin.fail())
+    {    int difSetting;
+        cin.clear();
+        cin.ignore(1000, '\n');
+    }
+
+    if(difOption == 1)
+        difSetting = 100;
+    else if (difOption == 2)
+        difSetting = 70;
+    else if (difOption == 3)
+        difSetting = 40;
+    else if (difOption == 4)
+        difSetting = 10;
+    else if (difOption == 5)
+        difSetting = 0;
+    else
+        difSetting = rand() % 100;
+
+    srand(static_cast<int> (time(0)));
+    fruitX = rand() % (x-4) + 2;
+    fruitY = rand() % (y-4) + 2;
+    system("cls");
+
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    while (gameOver == false)
+    {
+        setup();
+        Sleep(difSetting);
+        logic();
+
+        COORD pos = {0, 0};
+        SetConsoleCursorPosition(hConsole, pos);
+    }
+    system ("cls");
+    cout << "You score " << score << "." << endl;
+    Sleep(1000);
+}
